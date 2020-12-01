@@ -1,0 +1,8 @@
+[package]
+name = "aoc-2020"
+authors = ["Martin Jesper Low Madsen <martin@martinjlowm.dk>"]
+version = "1.0.0"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
