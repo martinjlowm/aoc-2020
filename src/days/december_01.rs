@@ -1,4 +1,5 @@
-use std::cmp::max;
+use std::collections::HashMap;
+use std::iter::FromIterator;
 
 pub static INPUT: &str = r#"
 1782
@@ -203,26 +204,45 @@ pub static INPUT: &str = r#"
 1669
 "#;
 
-static DESIRED_SUM: u32 = 2020;
+static DESIRED_SUM: i32 = 2020;
+
+fn part_1(expenses: &Vec<&i32>, search_lookup: &HashMap<i32, i32>) -> Option<i32> {
+    expenses.iter().find_map(|&expense| {
+        search_lookup
+            .get(&expense)
+            .and_then(|&paired_expense| Some(paired_expense * expense))
+    })
+}
+
+fn part_2(expenses: &Vec<&i32>, search_lookup: &HashMap<i32, i32>) -> Option<i32> {
+    expenses.iter().find_map(|&expense| {
+        let shifted_search_lookup: HashMap<i32, i32> = HashMap::from_iter(
+            search_lookup
+                .into_iter()
+                .map(|(exp, &initial_expense)| (exp - expense, initial_expense)),
+        );
+        part_1(expenses, &shifted_search_lookup).and_then(|product| Some(product * expense))
+    })
+}
 
 pub fn solve() {
-    let parts = INPUT.trim().split("\n").map(|line: &str| line.parse::<u32>().unwrap()).into_iter().collect::<Vec<u32>>();
+    let parsed_lines = INPUT.trim().split("\n");
 
-    let clone = parts.clone();
-    let prod = parts.into_iter().enumerate().fold(0, |acc, (i, part)| {
-        let (_, rest_parts) = clone.split_at(i);
+    let search_lookup: HashMap<i32, i32> = HashMap::from_iter(parsed_lines.map(|line: &str| {
+        let expense = line.parse::<i32>().unwrap();
 
-        let cloned_part = part.clone();
-        let matched_item = rest_parts.iter().find(|&rest_part| cloned_part + rest_part == DESIRED_SUM);
+        (DESIRED_SUM - expense, expense)
+    }));
 
-        max(
-            match matched_item {
-                Some(it) => it * cloned_part,
-                None => 0,
-            },
-            acc
-        )
-    });
+    let expenses = search_lookup.values().collect::<Vec<&i32>>();
 
-    println!("{}", prod);
+    {
+        let product = part_1(&expenses, &search_lookup);
+        println!("{}", product.unwrap());
+    }
+
+    {
+        let product = part_2(&expenses, &search_lookup);
+        println!("{}", product.unwrap());
+    }
 }
